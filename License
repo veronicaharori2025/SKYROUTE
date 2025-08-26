@@ -1,0 +1,87 @@
+
+## 4. Enhanced app.py with Documentation
+
+```python
+"""
+SkyRoute Main Application
+=========================
+Flask web server for optimal flight route finding.
+Handles HTTP requests, serves frontend, and coordinates with MeTTa engine.
+"""
+
+from flask import Flask, render_template, request, jsonify
+import logging
+from metta_integration import find_optimal_route, validate_input
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    """
+    Render the main landing page.
+    
+    Returns:
+        rendered HTML template for the index page
+    """
+    logger.info("Serving index page")
+    return render_template('index.html')
+
+@app.route('/find-route', methods=['POST'])
+def find_route():
+    """
+    API endpoint to find optimal flight routes.
+    Expects JSON data with departure, destination, and priority.
+    
+    Returns:
+        JSON response with optimal route or error message
+    """
+    try:
+        # Get request data
+        data = request.get_json()
+        
+        # Validate input
+        departure = data.get('departure', '').upper().strip()
+        destination = data.get('destination', '').upper().strip()
+        priority = data.get('priority', 'speed').lower().strip()
+        
+        logger.info(f"Route request: {departure} -> {destination} ({priority})")
+        
+        # Validate input parameters
+        validation_error = validate_input(departure, destination, priority)
+        if validation_error:
+            return jsonify({'error': validation_error}), 400
+        
+        # Find optimal route using MeTTa engine
+        result = find_optimal_route(departure, destination, priority)
+        
+        if result.get('error'):
+            return jsonify({'error': result['error']}), 400
+        
+        logger.info(f"Route found successfully")
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error in find_route: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors"""
+    return jsonify({'error': 'Endpoint not found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors"""
+    return jsonify({'error': 'Internal server error'}), 500
+
+if __name__ == '__main__':
+    """
+    Main entry point for the Flask application.
+    Runs the development server on port 5000.
+    """
+    logger.info("Starting SkyRoute server...")
+    app.run(debug=True, host='0.0.0.0', port=5000)

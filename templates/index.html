@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyRoute - Optimal Flight Finder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>✈️ SkyRoute</h1>
+            <p>Find your perfect flight with AI-powered optimization</p>
+        </header>
+
+        <!-- Main Form -->
+        <main class="main-content">
+            <div class="form-container">
+                <h2>Find Your Optimal Flight</h2>
+                
+                <form id="routeForm">
+                    <div class="form-group">
+                        <label for="departure">Departure Airport:</label>
+                        <input type="text" id="departure" name="departure" 
+                               placeholder="e.g., JFK" required maxlength="3"
+                               pattern="[A-Za-z]{3}" title="3-letter airport code">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="destination">Destination Airport:</label>
+                        <input type="text" id="destination" name="destination" 
+                               placeholder="e.g., LHR" required maxlength="3"
+                               pattern="[A-Za-z]{3}" title="3-letter airport code">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priority">Optimize For:</label>
+                        <select id="priority" name="priority" required>
+                            <option value="speed">Fastest Route</option>
+                            <option value="cost">Cheapest Route</option>
+                            <option value="comfort">Fewest Layovers</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="findRouteBtn">
+                        Find Optimal Route
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" class="results-container" style="display: none;">
+                <h3>Optimal Route Found</h3>
+                <div id="routeDetails"></div>
+                <div id="explanation"></div>
+                <button id="newSearchBtn">New Search</button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Finding your optimal route with MeTTa AI...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="error" class="error" style="display: none;">
+                <h3>❌ Error</h3>
+                <p id="errorMessage"></p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Powered by MeTTa Logical Programming | Built for MeTTa Hackathon</p>
+        </footer>
+    </div>
+
+    <script>
+        // JavaScript for handling form submission and API calls
+        document.getElementById('routeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const departure = document.getElementById('departure').value.toUpperCase();
+            const destination = document.getElementById('destination').value.toUpperCase();
+            const priority = document.getElementById('priority').value;
+            
+            // Show loading, hide other sections
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            
+            try {
+                const response = await fetch('/find-route', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        departure: departure,
+                        destination: destination,
+                        priority: priority
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'Unknown error occurred');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+        
+        function displayResults(data) {
+            const routeDetails = document.getElementById('routeDetails');
+            const explanation = document.getElementById('explanation');
+            
+            if (data.routes && data.routes.length > 0) {
+                const route = data.routes[0];
+                routeDetails.innerHTML = `
+                    <div class="route-card">
+                        <h4>${data.departure} → ${data.destination}</h4>
+                        <p><strong>Duration:</strong> ${route.total_duration || 'N/A'}</p>
+                        <p><strong>Cost:</strong> ${route.total_cost || 'N/A'}</p>
+                        <p><strong>Layovers:</strong> ${route.layovers || 0}</p>
+                    </div>
+                `;
+                
+                explanation.innerHTML = `
+                    <div class="explanation">
+                        <h4>Why this route?</h4>
+                        <p>${data.explanation || 'Optimized for your preferences'}</p>
+                    </div>
+                `;
+                
+                document.getElementById('results').style.display = 'block';
+            } else {
+                showError('No routes found for your criteria');
+            }
+        }
+        
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('error').style.display = 'block';
+        }
+        
+        // New search button
+        document.getElementById('newSearchBtn').addEventListener('click', function() {
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('routeForm').reset();
+        });
+    </script>
+</body>
+</html>

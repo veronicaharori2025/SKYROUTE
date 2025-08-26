@@ -1,0 +1,21 @@
+# SkyRoute Python Dependencies
+# Generated for MeTTa Hackathon submission
+
+# Web Framework
+Flask==2.3.3
+
+# MeTTa/Hyperon (if available)
+# hyperon==0.1.0
+
+# API Integration (for future use)
+requests==2.31.0
+
+# Testing
+pytest==7.4.2
+
+# Utilities
+python-dotenv==1.0.0
+
+# Development tools
+black==23.9.1
+flake8==6.1.0
