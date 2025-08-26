@@ -3,158 +3,727 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkyRoute - Optimal Flight Finder</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>SkyRoute - Optimal Flight Route Finder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #3b82f6;
+            --accent: #60a5fa;
+            --light: #f3f4f6;
+            --dark: #1f2937;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray: #9ca3af;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: #f8fafc;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .logo i {
+            color: white;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        nav a:hover {
+            opacity: 0.8;
+        }
+        
+        .hero {
+            padding: 60px 0;
+            text-align: center;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 800 400"><rect fill="%232563eb" width="800" height="400"/><path fill="%233b82f6" fill-opacity="0.4" d="M0 192L26.7 202.7C53.3 213 107 235 160 234.7C213.3 235 267 213 320 197.3C373.3 181 427 171 480 186.7C533.3 203 587 245 640 250.7C693.3 256 747 224 773.3 208L800 192L800 401L773.3 401C746.7 401 693 401 640 401C586.7 401 533 401 480 401C426.7 401 373 401 320 401C266.7 401 213 401 160 401C106.7 401 53 401 27 401L0 401Z"></path></svg>') center/cover no-repeat;
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+        
+        .search-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .search-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-group {
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--gray);
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: var(--secondary);
+        }
+        
+        .features {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .section-title h2 {
+            font-size: 36px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .section-title p {
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            background: var(--primary);
+            color: white;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 24px;
+        }
+        
+        .feature-card h3 {
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        .results {
+            padding: 80px 0;
+            background: #f1f5f9;
+        }
+        
+        .results-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .map-container {
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-list {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        
+        .result-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--light);
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .result-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .result-airline {
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .result-details {
+            display: grid;
+            grid-template-columns: 2fr 1fr 2fr;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .result-time {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .result-duration {
+            text-align: center;
+            color: var(--gray);
+        }
+        
+        .result-layovers {
+            text-align: center;
+            color: var(--gray);
+            font-size: 14px;
+        }
+        
+        .result-route {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        
+        .result-city {
+            font-size: 14px;
+            color: var(--gray);
+        }
+        
+        .preference-selector {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .preference-btn {
+            padding: 10px 20px;
+            background: var(--light);
+            border: 2px solid var(--gray);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .preference-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            text-align: left;
+        }
+        
+        .footer-section h3 {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .footer-section p {
+            margin-bottom: 10px;
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .social-icons a {
+            color: white;
+            font-size: 20px;
+        }
+        
+        .copyright {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero p {
+                font-size: 18px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>✈️ SkyRoute</h1>
-            <p>Find your perfect flight with AI-powered optimization</p>
-        </header>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-route"></i>
+                <span>SkyRoute</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Features</a></li>
+                    <li><a href="#">How It Works</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-        <!-- Main Form -->
-        <main class="main-content">
-            <div class="form-container">
-                <h2>Find Your Optimal Flight</h2>
-                
-                <form id="routeForm">
+    <section class="hero">
+        <div class="container">
+            <h1>Find Your Optimal Flight Route</h1>
+            <p>Smart pathfinding algorithms to get you the best flight options based on your preferences</p>
+            
+            <div class="search-box">
+                <form class="search-form">
                     <div class="form-group">
-                        <label for="departure">Departure Airport:</label>
-                        <input type="text" id="departure" name="departure" 
-                               placeholder="e.g., JFK" required maxlength="3"
-                               pattern="[A-Za-z]{3}" title="3-letter airport code">
+                        <label for="departure">From</label>
+                        <input type="text" id="departure" placeholder="Departure city">
                     </div>
-
                     <div class="form-group">
-                        <label for="destination">Destination Airport:</label>
-                        <input type="text" id="destination" name="destination" 
-                               placeholder="e.g., LHR" required maxlength="3"
-                               pattern="[A-Za-z]{3}" title="3-letter airport code">
+                        <label for="arrival">To</label>
+                        <input type="text" id="arrival" placeholder="Destination city">
                     </div>
-
                     <div class="form-group">
-                        <label for="priority">Optimize For:</label>
-                        <select id="priority" name="priority" required>
-                            <option value="speed">Fastest Route</option>
-                            <option value="cost">Cheapest Route</option>
-                            <option value="comfort">Fewest Layovers</option>
+                        <label for="depart-date">Departure Date</label>
+                        <input type="date" id="depart-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="return-date">Return Date (Optional)</label>
+                        <input type="date" id="return-date">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="preferences">Search Preferences</label>
+                        <select id="preferences">
+                            <option value="duration">Shortest Duration</option>
+                            <option value="cost">Lowest Cost</option>
+                            <option value="layovers">Fewest Layovers</option>
                         </select>
                     </div>
-
-                    <button type="submit" id="findRouteBtn">
-                        Find Optimal Route
-                    </button>
+                    <div class="form-group full-width">
+                        <button type="button" class="btn" onclick="findRoutes()"><i class="fas fa-search"></i> Find Routes</button>
+                    </div>
                 </form>
             </div>
-
-            <!-- Results Section -->
-            <div id="results" class="results-container" style="display: none;">
-                <h3>Optimal Route Found</h3>
-                <div id="routeDetails"></div>
-                <div id="explanation"></div>
-                <button id="newSearchBtn">New Search</button>
+        </div>
+    </section>
+<section class="results">
+        <div class="container">
+            <div class="section-title">
+                <h2>Optimal Flight Routes</h2>
+                <p>Results based on your preferences</p>
             </div>
-
-            <!-- Loading Indicator -->
-            <div id="loading" class="loading" style="display: none;">
-                <div class="spinner"></div>
-                <p>Finding your optimal route with MeTTa AI...</p>
+            
+            <div class="preference-selector">
+                <div class="preference-btn active" onclick="changePreference('duration')">
+                    <i class="fas fa-clock"></i> Shortest Duration
+                </div>
+                <div class="preference-btn" onclick="changePreference('cost')">
+                    <i class="fas fa-dollar-sign"></i> Lowest Cost
+                </div>
+                <div class="preference-btn" onclick="changePreference('layovers')">
+                    <i class="fas fa-exchange-alt"></i> Fewest Layovers
+                </div>
             </div>
-
-            <!-- Error Message -->
-            <div id="error" class="error" style="display: none;">
-                <h3>❌ Error</h3>
-                <p id="errorMessage"></p>
+            
+            <div class="results-container">
+                <div class="map-container" id="map">
+                    <!-- Map will be rendered here -->
+                </div>
+                
+                <div class="results-list" id="results">
+                    <div class="result-item">
+                        <div class="result-header">
+                            <div class="result-price">$427</div>
+                            <div class="result-airline">Delta Airlines</div>
+                        </div>
+                        <div class="result-details">
+                            <div class="result-time">08:00 AM</div>
+                            <div class="result-duration">5h 30m</div>
+                            <div class="result-time">01:30 PM</div>
+                        </div>
+                        <div class="result-route">
+                            <div class="result-city">New York (JFK)</div>
+                            <div class="result-layovers">Non-stop</div>
+                            <div class="result-city">London (LHR)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <div class="result-header">
+                            <div class="result-price">$382</div>
+                            <div class="result-airline">British Airways</div>
+                        </div>
+                        <div class="result-details">
+                            <div class="result-time">10:30 AM</div>
+                            <div class="result-duration">6h 45m</div>
+                            <div class="result-time">05:15 PM</div>
+                        </div>
+                        <div class="result-route">
+                            <div class="result-city">New York (JFK)</div>
+                            <div class="result-layovers">Non-stop</div>
+                            <div class="result-city">London (LHR)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <div class="result-header">
+                            <div class="result-price">$351</div>
+                            <div class="result-airline">American Airlines</div>
+                        </div>
+                        <div class="result-details">
+                            <div class="result-time">07:15 AM</div>
+                            <div class="result-duration">8h 20m</div>
+                            <div class="result-time">03:35 PM</div>
+                        </div>
+                        <div class="result-route">
+                            <div class="result-city">New York (JFK)</div>
+                            <div class="result-layovers">1 stop (Chicago)</div>
+                            <div class="result-city">London (LHR)</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </main>
+        </div>
+    </section>
 
-        <!-- Footer -->
-        <footer class="footer">
-            <p>Powered by MeTTa Logical Programming | Built for MeTTa Hackathon</p>
-        </footer>
-    </div>
+    <section class="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>How SkyRoute Works</h2>
+                <p>Our advanced algorithm finds the best flight routes based on your priorities</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>MeTTa AI Integration</h3>
+                    <p>Our custom MeTTa AI engine processes flight data and finds optimal routes using advanced pathfinding algorithms.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <h3>Custom Weighting</h3>
+                    <p>Prioritize what matters most to you: time, cost, or number of layovers. Our algorithm adjusts accordingly.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-plane-departure"></i>
+                    </div>
+                    <h3>Real-time Data</h3>
+                    <p>We integrate with airline APIs to get the most up-to-date flight information and pricing.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <h3>Visualization</h3>
+                    <p>See your route on an interactive map and understand your journey at a glance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>About SkyRoute</h3>
+                    <p>SkyRoute uses advanced pathfinding algorithms and MeTTa AI to find the optimal flight routes based on your preferences.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Contact Us</h3>
+                    <p><i class="fas fa-envelope"></i> info@skyroute.com</p>
+                    <p><i class="fas fa-phone"></i> +254 795115966</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Nairobi, Kenya</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Follow Us</h3>
+                    <p>Stay connected with us on social media</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025 SkyRoute. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 
     <script>
-        // JavaScript for handling form submission and API calls
-        document.getElementById('routeForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // Initialize map
+        function initMap() {
+            const map = L.map('map').setView([40.7128, -74.0060], 3);
             
-            const departure = document.getElementById('departure').value.toUpperCase();
-            const destination = document.getElementById('destination').value.toUpperCase();
-            const priority = document.getElementById('priority').value;
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
             
-            // Show loading, hide other sections
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('error').style.display = 'none';
+            // Add some sample route markers
+            const nyMarker = L.marker([40.7128, -74.0060]).addTo(map)
+                .bindPopup('New York (JFK)')
+                .openPopup();
+                
+            const londonMarker = L.marker([51.5074, -0.1278]).addTo(map)
+                .bindPopup('London (LHR)');
+                
+            const chicagoMarker = L.marker([41.8781, -87.6298]).addTo(map)
+                .bindPopup('Chicago (ORD)');
+                
+            // Add a sample route line
+            const routePoints = [
+                [40.7128, -74.0060],
+                [41.8781, -87.6298],
+                [51.5074, -0.1278]
+            ];
             
-            try {
-                const response = await fetch('/find-route', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        departure: departure,
-                        destination: destination,
-                        priority: priority
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    displayResults(data);
-                } else {
-                    showError(data.error || 'Unknown error occurred');
-                }
-            } catch (error) {
-                showError('Network error: ' + error.message);
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-            }
-        });
-        
-        function displayResults(data) {
-            const routeDetails = document.getElementById('routeDetails');
-            const explanation = document.getElementById('explanation');
+            const routeLine = L.polyline(routePoints, {
+                color: '#2563eb',
+                weight: 3,
+                opacity: 0.7
+            }).addTo(map);
             
-            if (data.routes && data.routes.length > 0) {
-                const route = data.routes[0];
-                routeDetails.innerHTML = `
-                    <div class="route-card">
-                        <h4>${data.departure} → ${data.destination}</h4>
-                        <p><strong>Duration:</strong> ${route.total_duration || 'N/A'}</p>
-                        <p><strong>Cost:</strong> ${route.total_cost || 'N/A'}</p>
-                        <p><strong>Layovers:</strong> ${route.layovers || 0}</p>
-                    </div>
-                `;
-                
-                explanation.innerHTML = `
-                    <div class="explanation">
-                        <h4>Why this route?</h4>
-                        <p>${data.explanation || 'Optimized for your preferences'}</p>
-                    </div>
-                `;
-                
-                document.getElementById('results').style.display = 'block';
-            } else {
-                showError('No routes found for your criteria');
-            }
+            // Fit map to show all markers
+            const group = new L.featureGroup([nyMarker, londonMarker, chicagoMarker]);
+            map.fitBounds(group.getBounds().pad(0.1));
         }
         
-        function showError(message) {
-            document.getElementById('errorMessage').textContent = message;
-            document.getElementById('error').style.display = 'block';
+        // Initialize map when page loads
+        window.onload = initMap;
+        
+        // Change preference function
+        function changePreference(pref) {
+            const buttons = document.querySelectorAll('.preference-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            
+            // In a real application, this would re-run the search with new preferences
+            console.log(`Preference changed to: ${pref}`);
         }
         
-        // New search button
-        document.getElementById('newSearchBtn').addEventListener('click', function() {
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('routeForm').reset();
-        });
+        // Find routes function
+        function findRoutes() {
+            const departure = document.getElementById('departure').value;
+            const arrival = document.getElementById('arrival').value;
+            
+            if (!departure || !arrival) {
+                alert('Please enter both departure and arrival cities.');
+                return;
+            }
+            
+            // In a real application, this would call the backend API
+            console.log(`Finding routes from ${departure} to ${arrival}`);
+            
+            // Simulate loading
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div style="text-align: center; padding: 40px;">Searching for optimal routes...</div>';
+            
+            setTimeout(() => {
+                // Simulate results
+                resultsDiv.innerHTML = `
+                    <div class="result-item">
+                        <div class="result-header">
+                            <div class="result-price">$427</div>
+                            <div class="result-airline">Delta Airlines</div>
+                        </div>
+                        <div class="result-details">
+                            <div class="result-time">08:00 AM</div>
+                            <div class="result-duration">5h 30m</div>
+                            <div class="result-time">01:30 PM</div>
+                        </div>
+                        <div class="result-route">
+                            <div class="result-city">${departure} (JFK)</div>
+                            <div class="result-layovers">Non-stop</div>
+                            <div class="result-city">${arrival} (LHR)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <div class="result-header">
+                            <div class="result-price">$382</div>
+                            <div class="result-airline">British Airways</div>
+                        </div>
+                        <div class="result-details">
+                            <div class="result-time">10:30 AM</div>
+                            <div class="result-duration">6h 45m</div>
+                            <div class="result-time">05:15 PM</div>
+                        </div>
+                        <div class="result-route">
+                            <div class="result-city">${departure} (JFK)</div>
+                            <div class="result-layovers">Non-stop</div>
+                            <div class="result-city">${arrival} (LHR)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <div class="result-header">
+                            <div class="result-price">$351</div>
+                            <div class="result-airline">American Airlines</div>
+                        </div>
+                        <div class="result-details">
+                            <div class="result-time">07:15 AM</div>
+                            <div class="result-duration">8h 20m</div>
+                            <div class="result-time">03:35 PM</div>
+                        </div>
+                        <div class="result-route">
+                            <div class="result-city">${departure} (JFK)</div>
+                            <div class="result-layovers">1 stop (Chicago)</div>
+                            <div class="result-city">${arrival} (LHR)</div>
+                        </div>
+                    </div>
+                `;
+            }, 1500);
+        }
     </script>
 </body>
 </html>
+
+
+
+
